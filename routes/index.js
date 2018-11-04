@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var config = require('../public/config.json');
+var signature = require('./signature').signature;
 var appId = config.appId;
 var appSecret = config.appSecret;
 var pageUrl = config.pageUrl;
@@ -21,5 +22,8 @@ router.get('/:first?/:second?', function(req, res, next) {
   // }
   res.render(first+second);
 });
+
+/* 获取微信签名 */
+signature();
 
 module.exports = router;
