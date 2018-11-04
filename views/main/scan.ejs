@@ -6,13 +6,20 @@
 <%- contentFor('script') %>
 <script src="http://res.wx.qq.com/open/js/jweixin-1.4.0.js"></script>
 <script>
-  wx.config({
-    debug: true,    //开启调试模式
-    appId: 'wx57777f72f0f81151',     //公众号唯一ID
-    timestamp: '',     //生成签名时间戳
-    nonceStr: '',      //生成签名随机串
-    signature: '',     //签名
-    jsApiList: ['scanQRCode']      //需要使用的JS接口列表 
+  $.ajax({
+    url: '/signature?url='+location.href,
+    type: 'get',
+    success: function(data){
+      console.log(data);
+      wx.config({
+        debug: true,    //开启调试模式
+        appId: 'wx57777f72f0f81151',     //公众号唯一ID
+        timestamp: data.timestamp,     //生成签名时间戳
+        nonceStr: data.nonceStr,      //生成签名随机串
+        signature: data.signature,     //签名
+        jsApiList: ['scanQRCode']      //需要使用的JS接口列表 
+      })
+    }
   })
 
   wx.ready(function(){

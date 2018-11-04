@@ -7,6 +7,7 @@ var expressLayouts = require('express-ejs-layouts');
 
 var index = require('./routes/index');
 var api = require('./routes/api');
+var signature = require('./routes/signature').router;
 
 var app = express();
 
@@ -24,6 +25,7 @@ app.use(expressLayouts);
 app.set('layout','layout');
 
 app.use('/api',api);
+app.use('/signature',signature);
 app.use('/', index);
 
 // catch 404 and forward to error handler
