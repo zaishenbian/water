@@ -17,7 +17,7 @@ function getTokenAndTicket(){
     var getTicketUrl = `https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${access_token}&type=jsapi`;
     request.get(getTicketUrl, function(ticketError, ticketRes, ticketBody){
       jsapi_ticket = JSON.parse(ticketBody).ticket;
-      console.log(jsapi_ticket);
+      console.log('jsapi_ticket:'+jsapi_ticket);
     })
   })
 }
