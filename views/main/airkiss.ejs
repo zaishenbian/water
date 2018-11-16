@@ -26,7 +26,7 @@
     wx.checkJsApi({
       jsApiList: ['configWXDeviceWiFi'],
       success: function(res) {
-        WeixinJSBridge.invoke('configWXDeviceWiFi', {}, function(res){
+        wx.invoke('configWXDeviceWiFi', {}, function(res){
           var err_msg = res.err_msg;
           if(err_msg == 'configWXDeviceWiFi:ok') {
             //配置成功
