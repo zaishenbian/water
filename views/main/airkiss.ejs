@@ -1,0 +1,66 @@
+<%- contentFor('content') %>
+
+
+<%- contentFor('script') %>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.4.0.js"></script>
+<script>
+  $.ajax({
+    url: '/signature?url='+location.href,
+    type: 'get',
+    success: function(data){
+      console.log(data);
+      wx.config({
+        beta:true,
+        debug: true,    //开启调试模式
+        appId: 'wx90e39d6efbdde4f2',     //公众号唯一ID
+        timestamp: data.timeStamp,     //生成签名时间戳
+        nonceStr: data.nonceStr,      //生成签名随机串
+        signature: data.signature,     //签名
+        jsApiList: ['configWXDeviceWiFi']      //需要使用的JS接口列表 
+      })
+    }
+  })
+
+  wx.ready(function(){
+    console.log('微信认证成功');
+    wx.checkJsApi({
+      jsApiList: ['configWXDeviceWiFi'],
+      success: function(res) {
+        WeixinJSBridge.invoke('configWXDeviceWiFi', {}, function(res){
+          var err_msg = res.err_msg;
+          if(err_msg == 'configWXDeviceWiFi:ok') {
+            //配置成功
+            alert("WIFI配置成功");
+            window.location.href = 'https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzU5NzUzNDMwMw==&scene=124#wechat_redirect'
+          } else {
+            //配置失败
+            alert(err_msg);
+          }
+        });
+      }
+    });
+  })
+
+  wx.error(function(res){
+    console.log('认证失败原因：'+res);
+  })
+
+  wx.checkJsApi({
+    jsApiList: ['scanQRCode'],
+    success: function(res){
+      console.log('检验二维码扫描接口：'+res);
+    }
+  })
+
+  var $scan = document.querySelector('.scan');
+  $scan.onclick = function(){
+    wx.scanQRCode({
+      needResult: 1,     //默认为0，由微信处理扫描结果，1则直接返回扫描结果
+      scanType: ['qrCode', 'barCode'],     //可以指定扫描二维码还是一维码，默认两者都有
+      success: function(res){
+        var result = res.resultStr;     //扫码返回的结果
+        console.log('扫码返回的结果：'+result);
+      }
+    })
+  }
+</script>
