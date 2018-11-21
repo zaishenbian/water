@@ -19,7 +19,7 @@ router.get('/main/conf', function(req, res){
     "userAddr": "",
     "userName": "",
     "userPhoneNum": "",
-    "eachNum": 0,
+    "eachNum": "",
     "extra": ""
   }
   /**

@@ -18,6 +18,10 @@
     padding: 0;
   }
 
+  .countDown{
+    color: #666;
+  }
+
   .editConfig,
   .submit {
     margin-top: 50px;
@@ -40,7 +44,7 @@
         <label class="weui-label">每次送几桶</label>
       </div>
       <div class="weui-cell__bd">
-        <input class="weui-input" <%= status===1000?'readonly':'' %> pattern="[0-9]+" tip="送水桶数" type="number" required name="bucketNumber" placeholder="请输入每次送水桶数">
+        <input class="weui-input" <%= status===1000?'readonly':'' %> pattern="[0-9]+" tip="送水桶数" type="number" required name="eachNum" placeholder="请输入每次送水桶数" value="<%= result.eachNum==0?"":result.eachNum %>">
       </div>
     </div>
     <div class="weui-cell editable">
@@ -48,7 +52,7 @@
         <label class="weui-label">送水地址</label>
       </div>
       <div class="weui-cell__bd">
-        <input class="weui-input" <%= status===1000?'readonly':'' %> type="text" required name="userAddress" tip="送水地址" placeholder="请输入送水地址">
+        <input class="weui-input" <%= status===1000?'readonly':'' %> type="text" required name="userAddr" tip="送水地址(精确到门牌号)" placeholder="请输入送水地址" value="<%= result.userAddr %>">
       </div>
     </div>
     <div class="weui-cell editable">
@@ -56,7 +60,7 @@
         <label class="weui-label">您的姓名</label>
       </div>
       <div class="weui-cell__bd">
-        <input class="weui-input" <%= status===1000?'readonly':'' %> type="text" required name="userName" pattern="[\u4e00-\u9fa5]+" tip="姓名" placeholder="请输入姓名">
+        <input class="weui-input" <%= status===1000?'readonly':'' %> type="text" required name="userName" pattern="[\u4e00-\u9fa5]+" tip="姓名" placeholder="请输入姓名" value="<%= result.userName %>">
       </div>
     </div>
     <div class="weui-cell editable weui-cell_vcode">
@@ -64,7 +68,7 @@
         <label class="weui-label">您的手机号</label>
       </div>
       <div class="weui-cell__bd">
-        <input class="weui-input" <%= status===1000?'readonly':'' %> type="tel" required name="userPhone" pattern="^1[3|4|5|7|8]\d{9}$" tip="手机号" placeholder="请输入手机号">
+        <input class="weui-input" <%= status===1000?'readonly':'' %> type="tel" required name="userPhoneNum" pattern="^1[3|4|5|7|8]\d{9}$" tip="手机号" placeholder="请输入手机号" value="<%= result.userPhoneNum %>">
       </div>
       <div class="weui-cell__ft <%= status===1000?'hide':'' %>">
         <button class="weui-vcode-btn getCode">获取验证码</button>
@@ -75,7 +79,7 @@
         <label class="weui-label">验证码</label>
       </div>
       <div class="weui-cell__bd">
-        <input class="weui-input" <%= status===1000?'readonly':'' %> type="number" required name="validateCode" pattern="[0-9]{4}" tip="验证码" placeholder="请输入验证码">
+        <input class="weui-input" <%= status===1000?'readonly':'' %> type="number" required name="smsCode" pattern="[0-9]{4}" tip="验证码" placeholder="请输入验证码">
       </div>
     </div>
     <div class="weui-cell editable">
@@ -83,7 +87,7 @@
         <label class="weui-label">备注信息</label>
       </div>
       <div class="weui-cell__bd remarkContent">
-        <textarea class="weui-textarea" placeholder="请输入备注信息" <%= status===1000?'readonly':'' %> rows="3"></textarea>
+        <textarea class="weui-textarea" placeholder="请输入备注信息" name="extra" <%= status===1000?'readonly':'' %> rows="3"><%= result.extra %></textarea>
         <div class="weui-textarea-counter"><span class="textNum">0</span>/200</div>
       </div>
     </div>
@@ -95,6 +99,7 @@
 
 <%- contentFor('script') %>
 <script>
+  var host = 'http://smartguy.xyz';
   var configForm = $('#configForm');
   var getCode = $('#configForm .getCode');
   var textarea = $('.remarkContent');
@@ -104,6 +109,20 @@
   var submitData = {};
   //获取验证码
   getCode.click(function() {
+    var userPhone = $('input[name="userPhone"]');
+    if(validate(userPhone)||getCode.hasClass('countDown')) return false;
+    countDown();
+    $.ajax({
+      url: `${host}/user/sendsms`,
+      type: 'post',
+      data: {
+        phone: userPhone.val(),
+        action: 'wxbind'
+      },
+      success: function(data){
+        console.log(data);
+      }
+    })
     return false;
   });
   //限制问题反馈字数
@@ -127,23 +146,7 @@
     var inp = $('#configForm input');
     var verifyBtn = false;
     inp.each(function (index, item) {
-      var val = $(item).val();
-      var required = $(item).attr('required');
-      var reg = new RegExp($(item).attr('pattern'), 'g');
-      var tip = $(item).attr('tip');
-      //验证是否为空
-      if (val == '' && required) {
-        $.alert(tip+"不能为空", "温馨提示", function () {
-          $(item).focus();
-        });
-        verifyBtn = true;
-        return false;
-      }
-      //验证是否符合规则
-      if (!reg.test(val)) {
-        $.alert("请输入正确的" + tip, "温馨提示", function () {
-          $(item).focus();
-        });
+      if(validate($(item))){
         verifyBtn = true;
         return false;
       }
@@ -152,7 +155,53 @@
     if (!verifyBtn) {
       submitData = configForm.serializeJson();
       console.log(submitData);
+      $.ajax({
+        url: `${host}/user/add`,
+        type: 'post',
+        data: submitData,
+        success: function(data){
+          console.log(data);
+        }
+      })
     }
   })
+
+  function countDown(){
+    getCode.removeClass('getCode').addClass('countDown');
+    var count = 60;
+    getCode.html(count);
+    var interval = setInterval(function(){
+      count--;
+      if(count<1){
+        clearInterval(interval);
+        interval = null;
+        getCode.removeClass('countDown').addClass('getCode').html('获取验证码');
+        return;
+      } 
+      getCode.html(count);
+    }, 1000);
+  }
+
+  function validate(element){
+    var val = element.val();
+    var required = element.attr('required');
+    var reg = new RegExp(element.attr('pattern'), 'g');
+    var tip = element.attr('tip');
+    //验证是否为空
+    if (val == '' && required) {
+      $.alert(tip+"不能为空", "温馨提示", function () {
+        element.focus();
+      });
+      return true;
+    }
+    //验证是否符合规则
+    if (!reg.test(val)) {
+      $.alert("请输入正确的" + tip, "温馨提示", function () {
+        element.focus();
+      });
+      return true;
+    }
+    return false;
+  }
 
 </script>
