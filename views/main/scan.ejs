@@ -13,7 +13,7 @@
       console.log(data);
       wx.config({
         debug: true,    //开启调试模式
-        appId: 'wx57777f72f0f81151',     //公众号唯一ID
+        appId: appId,     //公众号唯一ID
         timestamp: data.timeStamp,     //生成签名时间戳
         nonceStr: data.nonceStr,      //生成签名随机串
         signature: data.signature,     //签名
