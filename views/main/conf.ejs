@@ -88,7 +88,7 @@
       </div>
       <div class="weui-cell__bd remarkContent">
         <textarea class="weui-textarea" placeholder="请输入备注信息" name="extra" <%= status===1000?'readonly':'' %> rows="3"><%= result.extra %></textarea>
-        <div class="weui-textarea-counter"><span class="textNum">0</span>/200</div>
+        <div class="weui-textarea-counter"><span class="textNum"><%= result.extra.length %></span>/200</div>
       </div>
     </div>
   </div>
@@ -99,7 +99,7 @@
 
 <%- contentFor('script') %>
 <script>
-  var host = 'http://smartguy.xyz';
+  var host = 'http://smartguy.xyz:9001';
   var configForm = $('#configForm');
   var getCode = $('#configForm .getCode');
   var textarea = $('.remarkContent');
@@ -109,16 +109,17 @@
   var submitData = {};
   //获取验证码
   getCode.click(function() {
-    var userPhone = $('input[name="userPhone"]');
+    var userPhone = $('input[name="userPhoneNum"]');
     if(validate(userPhone)||getCode.hasClass('countDown')) return false;
+    console.log(userPhone.val())
     countDown();
     $.ajax({
-      url: `${host}/user/sendsms`,
+      url: `${host}/sms/sendsms`,
       type: 'post',
-      data: {
+      data: JSON.stringify({
         phone: userPhone.val(),
         action: 'wxbind'
-      },
+      }),
       success: function(data){
         console.log(data);
       }
@@ -154,13 +155,15 @@
     //表单序列化
     if (!verifyBtn) {
       submitData = configForm.serializeJson();
-      console.log(submitData);
+      submitData.eachNum = parseInt(submitData.eachNum);
       $.ajax({
-        url: `${host}/user/add`,
+        url: `${host}/user/add?smsCode=${submitData.smsCode}`,
         type: 'post',
-        data: submitData,
+        data: JSON.stringify(submitData),
         success: function(data){
-          console.log(data);
+          if(data.status == 1000){
+            location.reload();
+          }
         }
       })
     }
